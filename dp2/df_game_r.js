@@ -1956,7 +1956,7 @@ function fix_use_emblem()
                             var emblem_item_id = api_PacketBuf_get_int(packet_buf);
                             //该徽章镶嵌的时装插槽id
                             var avartar_socket_slot = api_PacketBuf_get_byte(packet_buf);
-                            //log('emblem_inven_slot=' + emblem_inven_slot + ', emblem_item_id=' + emblem_item_id + ', avartar_socket_slot=' + avartar_socket_slot);
+                            console.log('emblem_inven_slot=' + emblem_inven_slot + ', emblem_item_id=' + emblem_item_id + ', avartar_socket_slot=' + avartar_socket_slot);
                             //获取徽章道具
                             var emblem = CInventory_GetInvenRef(inven, INVENTORY_TYPE_ITEM, emblem_inven_slot);
                             //校验徽章及插槽数据是否合法
@@ -1997,7 +1997,7 @@ function fix_use_emblem()
                             //设置时装插槽数据
                             var emblem_item_id = emblems[avartar_socket_slot][1];
                             api_set_JewelSocketData(jewel_socket_data, avartar_socket_slot, emblem_item_id);
-                            //log('徽章item_id=' + emblem_item_id + '已成功镶嵌进avartar_socket_slot=' + avartar_socket_slot + '的槽内!');
+                            console.log('徽章item_id=' + emblem_item_id + '已成功镶嵌进avartar_socket_slot=' + avartar_socket_slot + '的槽内!');
                         }
                         //时装插槽数据存档
                         DB_UpdateAvatarJewelSlot_makeRequest(CUserCharacInfo_getCurCharacNo(user), api_get_avartar_ui_id(avartar), jewel_socket_data);
@@ -2010,7 +2010,7 @@ function fix_use_emblem()
                         InterfacePacketBuf_finalize(packet_guard, 1);
                         CUser_Send(user, packet_guard);
                         Destroy_PacketGuard_PacketGuard(packet_guard);
-                        //log('镶嵌请求已处理完成!');
+                        console.log('镶嵌请求已处理完成!');
                     }
                 } catch (error)
                 {
@@ -2024,7 +2024,26 @@ function fix_use_emblem()
             }
         });
 }
-	
+
+//获取时装在数据库中的uid
+function api_get_avartar_ui_id(avartar)
+{
+    return avartar.add(7).readInt();
+}
+
+//设置时装插槽数据(时装插槽数据指针, 插槽, 徽章id)
+//jewel_type: 红=0x1, 黄=0x2, 绿=0x4, 蓝=0x8, 白金=0x10
+function api_set_JewelSocketData(jewelSocketData, slot, emblem_item_id)
+{
+    if (!jewelSocketData.isNull())
+    {
+        //每个槽数据长6个字节: 2字节槽类型+4字节徽章item_id
+        //镶嵌不改变槽类型, 这里只修改徽章id
+        jewelSocketData.add(slot * 6 + 2).writeInt(emblem_item_id);
+    }
+    return;
+}
+
 //加载主功能
 function start() {
     hook_history_log();
