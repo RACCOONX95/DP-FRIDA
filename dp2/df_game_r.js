@@ -505,6 +505,10 @@ var WongWork_CQuestClear_isClearedQuest = new NativeFunction(ptr(0x808BAE0), 'in
 var stSelectQuestParam_stSelectQuestParam = new NativeFunction(ptr(0x83480B4), 'pointer', ['pointer', 'pointer'], {"abi":"sysv"});
 var Quest_check_possible = new NativeFunction(ptr(0x8352D86), 'int', ['pointer', 'pointer'], {"abi":"sysv"});
 
+//玩家虚弱值
+var CUserCharacInfo_setCurCharacStamina = new NativeFunction(ptr(0x082F0914),'int',['pointer','int'],{"abi":"sysv"});
+//设置背包容量
+var  CInventory_getInventory_capacity = new NativeFunction(ptr(0x0822D6FC),'int',['pointer'],{"abi":"sysv"});
 //服务器组包
 var PacketGuard_PacketGuard = new NativeFunction(ptr(0x858DD4C), 'int', ['pointer'], { "abi": "sysv" });
 var InterfacePacketBuf_put_header = new NativeFunction(ptr(0x80CB8FC), 'int', ['pointer', 'int', 'int'], { "abi": "sysv" });
@@ -1715,21 +1719,21 @@ function api_CUser_Add_Item_list(user, item_list)
 /*获取道具时使用ui显示*/
 function SendItemWindowNotification(user, item_list)
 {
-	var packet_guard = api_PacketGuard_PacketGuard();
-	InterfacePacketBuf_put_header(packet_guard, 1, 163); //协议 ENUM_NOTIPACKET_POWER_WAR_PROLONG
-	InterfacePacketBuf_put_byte(packet_guard, 1); //默认1
-	InterfacePacketBuf_put_short(packet_guard, 0); //槽位id 填入0即可
-	InterfacePacketBuf_put_int(packet_guard, 0); //未知 0以上即可
-	InterfacePacketBuf_put_short(packet_guard, item_list.length); //道具组数
-	//写入道具代码和道具数量
-	for (var i = 0; i < item_list.length; i++)
-	{
-		InterfacePacketBuf_put_int(packet_guard, item_list[i][0]); //道具代码
-		InterfacePacketBuf_put_int(packet_guard, item_list[i][1]); //道具数量 装备/时装时 任意均可
-	}
-	InterfacePacketBuf_finalize(packet_guard, 1); //确定发包内容
-	CUser_Send(user, packet_guard); //发包
-	Destroy_PacketGuard_PacketGuard(packet_guard); //清空buff区
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_put_header(packet_guard, 1, 163); //协议 ENUM_NOTIPACKET_POWER_WAR_PROLONG
+    InterfacePacketBuf_put_byte(packet_guard, 1); //默认1
+    InterfacePacketBuf_put_short(packet_guard, 0); //槽位id 填入0即可
+    InterfacePacketBuf_put_int(packet_guard, 0); //未知 0以上即可
+    InterfacePacketBuf_put_short(packet_guard, item_list.length); //道具组数
+    //写入道具代码和道具数量
+    for (var i = 0; i < item_list.length; i++)
+    {
+        InterfacePacketBuf_put_int(packet_guard, item_list[i][0]); //道具代码
+        InterfacePacketBuf_put_int(packet_guard, item_list[i][1]); //道具数量 装备/时装时 任意均可
+    }
+    InterfacePacketBuf_finalize(packet_guard, 1); //确定发包内容
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard); //清空buff区
 }
 
 function Dark_Knight_Button() //黑暗武士按键
@@ -1758,6 +1762,16 @@ function hook_user_inout_game_world() //角色登入和登出
 				this.user = args[1];
 			},
 			onLeave: function (retval) {
+                send_user_notice_text_window(this.user,"欢迎");
+                //force_set_user_stamina(this.user,55);
+                //force_open_auctionHouse(this.user,1);
+                //force_open_goldConsignment(this.user,1);
+                
+                // var items = [
+                //     [3037,1],
+                //     [3037,1],
+                // ];
+                // api_CUser_Add_Item_list(this.user, items);
                 api_gameWorld_SendNotiPacketMessage('['+getLocalTimestamp().split('T')[0]+']欢迎<'+ 'Lv.' +CUserCharacInfo_get_charac_level(this.user)+' '+api_CUserCharacInfo_getCurCharacName(this.user) + '>上线', 14);
             }
 		});
@@ -1802,19 +1816,19 @@ function Inspection_tasks(user, quest_ids) {
 
 function SendItemWindowNotification1(user, item_list)
 {
-	var packet_guard = api_PacketGuard_PacketGuard();
-	InterfacePacketBuf_put_header(packet_guard, 1, 600); //设置通讯包头,指定协议
-	InterfacePacketBuf_put_byte(packet_guard, 1); //构建包头
-	InterfacePacketBuf_put_byte(packet_guard, item_list.length); //压入数组量
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_put_header(packet_guard, 1, 600); //设置通讯包头,指定协议
+    InterfacePacketBuf_put_byte(packet_guard, 1); //构建包头
+    InterfacePacketBuf_put_byte(packet_guard, item_list.length); //压入数组量
 
-	for (var i = 0; i < item_list.length; i++)//依次处理数组
-	{
-		InterfacePacketBuf_put_int(packet_guard, item_list[i][0]); //道具代码
-		InterfacePacketBuf_put_byte(packet_guard, item_list[i][1]); //道具数量
-	}
-	InterfacePacketBuf_finalize(packet_guard, 1); //确定发包内容
-	CUser_Send(user, packet_guard); //发包
-	Destroy_PacketGuard_PacketGuard(packet_guard); //清空buff区
+    for (var i = 0; i < item_list.length; i++)//依次处理数组
+    {
+        InterfacePacketBuf_put_int(packet_guard, item_list[i][0]); //道具代码
+        InterfacePacketBuf_put_byte(packet_guard, item_list[i][1]); //道具数量
+    }
+    InterfacePacketBuf_finalize(packet_guard, 1); //确定发包内容
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard); //清空buff区
 }
 
 //角色使用道具触发事件
@@ -1858,33 +1872,85 @@ function enable_online_reward()
             {
                 var user = args[0];
                 //当前系统时间
-                var cur_time = api_CSystemTime_getCurSec();
-                //本次登录时间
-                var login_tick = CUserCharacInfo_getLoginTick(user);
-                if(login_tick > 0)
-                {
-                    //在线时长(分钟)
-                    var diff_time = Math.floor((cur_time - login_tick) / 60);
-                    //在线10min后开始计算
-                    if(diff_time < 10)
-                        return;
-                    //在线奖励最多发送1天
-                    if(diff_time > 1*24*60)
-                        return;
-                    //奖励: 每分钟0.1点券
-                    var REWARD_CASH_CERA_PER_MIN = 0.1;
-                    //计算奖励
-                    var reward_cash_cera = Math.floor(diff_time*REWARD_CASH_CERA_PER_MIN);
-                    //发点券
-                    api_recharge_cash_cera(user, reward_cash_cera);
-                    //发消息通知客户端奖励已发送
-                    api_CUser_SendNotiPacketMessage(user, '[' + getLocalTimestamp().split('T')[0] + '] 在线奖励已发送(当前阶段:' + reward_cash_cera + ')', 6);
-                }
+                // var cur_time = api_CSystemTime_getCurSec();
+                // //本次登录时间
+                // var login_tick = CUserCharacInfo_getLoginTick(user);
+                // if(login_tick > 0)
+                // {
+                //     //在线时长(分钟)
+                //     var diff_time = Math.floor((cur_time - login_tick) / 60);
+                //     //在线10min后开始计算
+                //     if(diff_time < 10)
+                //         return;
+                //     //在线奖励最多发送1天
+                //     if(diff_time > 1*24*60)
+                //         return;
+                //     //奖励: 每分钟0.1点券
+                //     var REWARD_CASH_CERA_PER_MIN = 0.1;
+                //     //计算奖励
+                //     var reward_cash_cera = Math.floor(diff_time*REWARD_CASH_CERA_PER_MIN);
+                //     //发点券
+                //     api_recharge_cash_cera(user, reward_cash_cera);
+                //     //发消息通知客户端奖励已发送
+                //     api_CUser_SendNotiPacketMessage(user, '[' + getLocalTimestamp().split('T')[0] + '] 在线奖励已发送(当前阶段:' + reward_cash_cera + ')', 6);
+                // }
             },
             onLeave: function (retval)
             {
             }
         });
+}
+
+//发送文本公告弹窗
+function send_user_notice_text_window(user,str)
+{
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_clear(packet_guard);
+    InterfacePacketBuf_put_header(packet_guard, 1, 233); //设置通讯包头,指定协议
+    InterfacePacketBuf_put_byte(packet_guard, 1);//一条数据
+    InterfacePacketBuf_put_byte(packet_guard, 1);//一条数据
+    api_InterfacePacketBuf_put_string(packet_guard,str);
+    InterfacePacketBuf_finalize(packet_guard, 1); //确定发包内容
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard); //清空buff区
+}
+
+//开关拍卖行
+function force_open_auctionHouse(user,isOpen)
+{
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_clear(packet_guard);
+    InterfacePacketBuf_put_header(packet_guard, 0, 183);
+    InterfacePacketBuf_put_byte(packet_guard, 52);
+    InterfacePacketBuf_put_byte(packet_guard, isOpen); //0关闭，1开启
+    InterfacePacketBuf_finalize(packet_guard, 1);
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard);
+}
+
+//强制玩家关闭游戏
+function force_close_user_client(user)
+{
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_clear(packet_guard);
+    InterfacePacketBuf_put_header(packet_guard, 1, 3);
+    InterfacePacketBuf_put_byte(packet_guard, 1);
+    InterfacePacketBuf_finalize(packet_guard, 1);
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard);
+}
+
+//开关金币寄售
+function force_open_goldConsignment(user,isOpen)
+{
+    var packet_guard = api_PacketGuard_PacketGuard();
+    InterfacePacketBuf_clear(packet_guard);
+    InterfacePacketBuf_put_header(packet_guard, 0, 183);
+    InterfacePacketBuf_put_byte(packet_guard, 1);
+    InterfacePacketBuf_put_byte(packet_guard, isOpen); //0关闭，1开启
+    InterfacePacketBuf_finalize(packet_guard, 1);
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard);
 }
 
 //所有人赛利亚房间相互可见
@@ -1900,7 +1966,6 @@ function share_seria_room()
         }
     });
 }
-
 
 //修复时装镶嵌
 function fix_use_emblem()
@@ -2044,6 +2109,64 @@ function api_set_JewelSocketData(jewelSocketData, slot, emblem_item_id)
     return;
 }
 
+//强制开启所有存在的活动
+function force_open_all_event(isOpen) {
+    Interceptor.attach(ptr(0x080C84FA), {
+        onEnter: function (args){
+            
+        },
+        onLeave: function (retval) {
+            retval.replace(isOpen)
+        }
+    });
+}
+
+//设置虚弱
+function force_set_user_stamina(user,value){
+    var packet_guard = api_PacketGuard_PacketGuard();
+    CUserCharacInfo_setCurCharacStamina(user,value);
+    InterfacePacketBuf_clear(packet_guard);
+    InterfacePacketBuf_put_header(packet_guard, 0, 33);
+    InterfacePacketBuf_put_byte(packet_guard, value);
+    InterfacePacketBuf_finalize(packet_guard, 1);
+    CUser_Send(user, packet_guard); //发包
+    Destroy_PacketGuard_PacketGuard(packet_guard);
+}
+
+//获取背包扩展次数
+function api_get_user_extend_inventory_capacity_num(user)
+{
+    var inven = CUserCharacInfo_getCurCharacInvenW(user);
+    var num = CInventory_getInventory_capacity(inven);
+    return num;
+}
+
+//TODO:禁用分解功能
+function force_forbidden_disjoint() {
+    Interceptor.attach(ptr(0x081FA0F6),{
+        onLeave: function(retval) {
+            retval.replace(19)
+        }
+    });
+}
+
+//TODO:烟花类道具使用
+//0x081BDC7E 购买道具
+//0x086193F8 卖出道具
+function send_firework_notice() {
+    Interceptor.attach(ptr(0x08233F38),{
+        onEnter: function(args){
+            var user = args[1]
+            var charac_name = api_CUserCharacInfo_getCurCharacName(user);
+            var item_id = user.add(285).readU32();
+            var item_name = api_CItem_getItemName(item_id);
+            api_gameWorld_SendNotiPacketMessage('我使用了道具[' + item_name + ']， ID为:' + item_id + '。',14);
+        },
+        onLeave: function(retval){
+        }
+    });
+}
+
 //加载主功能
 function start() {
     hook_history_log();
@@ -2052,9 +2175,11 @@ function start() {
 	//Dark_Knight_Button;//黑暗武士按键修复//需要导入PVF文件
     fix_use_emblem(); //镶嵌
     enable_online_reward(); //在线奖励
+    //force_open_all_event(1);
     share_seria_room();//所有人赛利亚房间相互可见
 	hook_user_inout_game_world();//角色登入和登出
 	enable_drop_use_luck_piont(); //角色幸运值影响装备爆率
+    send_firework_notice();
 	api_scheduleOnMainThread(init_db, null);//初始化数据库
 	console.log('================frida start function end ================');
     hook_TimerDispatcher_dispatch();
