@@ -1929,7 +1929,7 @@ function fix_use_emblem()
                     var emblem_cnt = api_PacketBuf_get_byte(packet_buf);
                     //获取时装道具
                     var inven = CUserCharacInfo_getCurCharacInvenW(user);
-                    var avartar = CInventory_GetInvenRef(inven, INVENTORY_TYPE_AVARTAR, avartar_inven_slot);
+                    var avartar = CInventory_getInvenRef(inven, INVENTORY_TYPE_AVARTAR, avartar_inven_slot);
                     //校验时装 数据是否合法
                     if (Inven_Item_isEmpty(avartar) || (Inven_Item_getKey(avartar) != avartar_item_id) || CUser_CheckItemLock(user, 2, avartar_inven_slot))
                     {
@@ -1937,7 +1937,7 @@ function fix_use_emblem()
                     }
                     //获取时装插槽数据
                     var avartar_add_info = Inven_Item_get_add_info(avartar);
-                    var inven_avartar_mgr = CInventory_GetAvatarItemMgrR(inven);
+                    var inven_avartar_mgr = CInventory_getAvatarItemMgrR(inven);
                     var jewel_socket_data = WongWork_CAvatarItemMgr_getJewelSocketData(inven_avartar_mgr, avartar_add_info);
 
                     if (jewel_socket_data.isNull())
@@ -1958,7 +1958,7 @@ function fix_use_emblem()
                             var avartar_socket_slot = api_PacketBuf_get_byte(packet_buf);
                             console.log('emblem_inven_slot=' + emblem_inven_slot + ', emblem_item_id=' + emblem_item_id + ', avartar_socket_slot=' + avartar_socket_slot);
                             //获取徽章道具
-                            var emblem = CInventory_GetInvenRef(inven, INVENTORY_TYPE_ITEM, emblem_inven_slot);
+                            var emblem = CInventory_getInvenRef(inven, INVENTORY_TYPE_ITEM, emblem_inven_slot);
                             //校验徽章及插槽数据是否合法
                             if (Inven_Item_isEmpty(emblem) || (Inven_Item_getKey(emblem) != emblem_item_id) || (avartar_socket_slot >= 3))
                             {
@@ -1972,7 +1972,7 @@ function fix_use_emblem()
                                 return;
                             }
                             //校验徽章类型
-                            if (!CItem_is_stackable(citem) || (CStackableItem_GetItemType(citem) != 20))
+                            if (!CItem_is_stackable(citem) || (CStackableItem_getItemType(citem) != 20))
                             {
                                 return;
                             }
