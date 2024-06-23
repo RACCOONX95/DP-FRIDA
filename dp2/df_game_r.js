@@ -66,15 +66,7 @@ function setup() {
 rpc.exports = {
     init: function (stage, parameters) 
 	{
-            
-            console.log('yb_hook_history_log--------------------OK');
-            
-            console.log('yb_hook_encrypt--------------------OK');
-
-			start()
-            console.log('yb_start--------------------OK');
-		
-            
+			start();
 	},
 	dispose: function ()
 	{
@@ -242,14 +234,12 @@ function api_WongWork_CMailBoxHelper_ReqDBSendNewSystemMultiMail(target_charac_n
 }
 
 //获取背包槽中的道具
-var ye_yb = '夜';
 var INVENTORY_TYPE_BODY = 0;            //身上穿的装备(0-26)
 var INVENTORY_TYPE_ITEM = 1;            //物品栏(0-311)
 var INVENTORY_TYPE_AVARTAR = 2;         //时装栏(0-104)
 var INVENTORY_TYPE_CREATURE = 3;        //宠物装备(0-241)
 
 //通知客户端更新背包栏
-var bai_yb = '白';
 var ENUM_ITEMSPACE_INVENTORY = 0;       //物品栏
 var ENUM_ITEMSPACE_AVATAR = 1;          //时装栏
 var ENUM_ITEMSPACE_CARGO = 2;           //仓库
@@ -257,7 +247,6 @@ var ENUM_ITEMSPACE_CREATURE = 7;        //宠物栏
 var ENUM_ITEMSPACE_ACCOUNT_CARGO = 12;  //账号仓库
 
 //完成角色当前可接的所有任务(仅发送金币/经验/QP等基础奖励 无道具奖励)
-var yi_yb = '一';
 var QUEST_gRADE_COMMON_UNIQUE = 5;                  //任务脚本中[grade]字段对应的常量定义 可以在importQuestScript函数中找到
 var QUEST_gRADE_NORMALY_REPEAT = 4;                 //可重复提交的重复任务
 var QUEST_gRADE_DAILY = 3;                          //每日任务
@@ -266,7 +255,6 @@ var QUEST_gRADE_ACHIEVEMENT = 2;                           //史诗任务
 
 //将协议发给所有在线玩家(慎用! 广播类接口必须限制调用频率, 防止CC攻击)
 //除非必须使用, 否则改用对象更加明确的CParty::send_to_party/GameWorld::send_to_area
-var jian_yb = '键';
 var GameWorld_send_all = new NativeFunction(ptr(0x86C8C14),  'int', ['pointer', 'pointer'], {"abi":"sysv"});
 var GameWorld_send_all_with_state = new NativeFunction(ptr(0x86C9184),  'int', ['pointer', 'pointer', 'int'], {"abi":"sysv"});
 
@@ -281,7 +269,6 @@ var GameWorld_find_from_world = new NativeFunction(ptr(0x86C4B9C), 'pointer', ['
 var GameWorld_move_area = new NativeFunction(ptr(0x86C5A84), 'pointer', ['pointer', 'pointer', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int', 'int'], {"abi":"sysv"});
 
 //从客户端封包中读取数据
-var duan_yb = '端 ';
 var PacketBuf_get_byte = new NativeFunction(ptr(0x858CF22), 'int', ['pointer', 'pointer'], {"abi":"sysv"});
 var PacketBuf_get_short = new NativeFunction(ptr(0x858CFC0), 'int', ['pointer', 'pointer'], {"abi":"sysv"});
 var PacketBuf_get_int = new NativeFunction(ptr(0x858D27E), 'int', ['pointer', 'pointer'], {"abi":"sysv"});
@@ -374,7 +361,7 @@ var CInventory_delete_item = new NativeFunction(ptr(0x850400C), 'int', ['pointer
 //时装镶嵌数据存盘
 var DB_UpdateAvatarJewelSlot_makeRequest = new NativeFunction(ptr(0x843081C), 'pointer', ['int', 'int', 'pointer'], {"abi":"sysv"});
 
- //获取角色名字
+//获取角色名字
 var CUserCharacInfo_getCurCharacName = new NativeFunction(ptr(0x8101028), 'pointer', ['pointer'], {"abi":"sysv"});
 //给角色发消息
 var CUser_SendNotiPacketMessage = new NativeFunction(ptr(0x86886CE), 'int', ['pointer', 'pointer', 'int'], {"abi":"sysv"});
@@ -567,16 +554,17 @@ function api_CItem_getItemName(item_id)
     return item_id.toString();
 }
 
+//TODO:不知道做的什么
 Interceptor.attach(ptr(0x080FC850),
 {
 	onEnter: function (args) 
 	{
-	this.equiPos = args[2].add(27).readU16();
-	this.user = args[1];
+	    this.equiPos = args[2].add(27).readU16();
+	    this.user = args[1];
 	},
 	onLeave: function (retval)
 	{
-	CUser_SendUpdateItemList(this.user, 1, 0, this.equiPos);
+	    CUser_SendUpdateItemList(this.user, 1, 0, this.equiPos);
 	}
 });
 	
@@ -605,7 +593,8 @@ function api_read_file(path, mode, len)
 var logFilePath = null;
 var directoryPath = '/dp2/frida_log/';
 if (create_directory(directoryPath)) {
-} else {
+} 
+else {
 }
 
 var originalConsoleLog = console.log;
@@ -628,6 +617,7 @@ function createDirectory(path) {
     }
 }
 
+//linux创建文件夹
 function api_mkdir(path) {
     var mkdir = new NativeFunction(Module.getExportByName(null, 'mkdir'), 'int', ['pointer', 'int'], { "abi": "sysv" });
     var path_ptr = Memory.allocUtf8String(path);
@@ -640,26 +630,48 @@ function getLocalTimestamp() {
     return date.toISOString();
 }
 
+//year/month/day hour:minute:second
+function getLocalTimestampByFormat1()
+{
+    var date = new Date();
+    date = new Date(date.setHours(date.getHours() + 0)); //转换到本地时间
+    var year = date.getFullYear().toString();
+    var month = (date.getMonth() + 1).toString();
+    var day = date.getDate().toString();
+    var hour = date.getHours().toString();
+    var minute = date.getMinutes().toString();
+    var second = date.getSeconds().toString();
+    var ms = date.getMilliseconds().toString();
+    return year + '/' + month + '/' + day + ' ' + hour + ':' + minute + ':' + second;
+}
+
 function create_directory(path) {
-    if (!logFilePath) {
+    if (!logFilePath) 
+    {
         logFilePath = directoryPath + 'frida_' + api_CEnvironment_get_file_name() + '_' + getLocalTimestamp().split('T')[0] + '.log';
     }
 
     if (logFilePath) {
-        try {
+        try 
+        {
             var file = new File(logFilePath, 'a');
-            file.write('[' + getLocalTimestamp() + '] ' + msg + '\n');
+            file.write('[' + getLocalTimestampByFormat1() + '] ' + msg + '\n');
             file.flush();
             file.close();
-        } catch (e) {
+        } 
+        catch (e) 
+        {
             // handle error
         }
     }
 
     var isCreated = api_mkdir(path);
-    if (isCreated) {
+    if (isCreated) 
+    {
         console.log('Directory created successfully: ' + path);
-    } else {
+    } 
+    else 
+    {
         console.log('Failed to create directory: ' + path);
         console.log(logFilePath);
     }
@@ -673,7 +685,7 @@ function writeToCustomLog(msg) {
     var segmentation3 = segmentation1.split('.')[0]
     try {
         var f = new File(logFilePath, "a");
-        f.write('[' + ye_yb + bai_yb + yi_yb + jian_yb + duan_yb + segmentation3 + ']' + msg + '\n');
+        f.write('[' + segmentation3 + ']' + msg + '\n');
         f.flush();
         f.close();
     } catch (e) {
@@ -1437,35 +1449,6 @@ function api_MySQL_get_binary(mysql, field_index)
 	return null;
 }
 
-/////------------------------------------------------------------------------------------------------------------------------------------------
-var firstSecondsValueStorage = null;
-var First_kill = null;
-var dungeonTimeRecords = {};
-var seconds;
-
-function timeToSeconds(timeString) {
-var hours = parseInt(timeString.substring(0, 2));
-var minutes = parseInt(timeString.substring(2, 4));
-var seconds = parseInt(timeString.substring(4, 6));
-var totalSeconds = hours * 3600 + minutes * 60 + seconds;
-return totalSeconds;
-}
-
-function saveFirstSecondsValue(charac_no, seconds) 
-{
-    firstSecondsValueStorage = seconds;
-}
-
-function getSavedFirstSecondsValue(charac_no) 
-{
-    return firstSecondsValueStorage;
-}
-
-function clearSavedFirstSecondsValue(charac_no) 
-{
-    firstSecondsValueStorage = null;
-}
-
 //返回选择角色界面
 var CUser_ReturnToSelectCharacList = new NativeFunction(ptr(0x8686FEE), 'int', ['pointer', 'int'], {"abi":"sysv"});
 
@@ -1901,7 +1884,7 @@ function enable_online_reward()
         });
 }
 
-//发送文本公告弹窗
+//TODO:发送文本公告弹窗
 function send_user_notice_text_window(user,str)
 {
     var packet_guard = api_PacketGuard_PacketGuard();
@@ -1940,6 +1923,22 @@ function force_close_user_client(user)
     Destroy_PacketGuard_PacketGuard(packet_guard);
 }
 
+//绝望之塔层数
+const TOD_Layer_TOD_Layer = new NativeFunction(ptr(0x085FE7B4), 'pointer', ['pointer', 'int'], { "abi": "sysv" });
+//设置绝望之塔层数
+const TOD_UserState_setEnterLayer = new NativeFunction(ptr(0x086438FC), 'pointer', ['pointer', 'pointer'], { "abi": "sysv" });
+//获取角色扩展数据
+const CUser_GetCharacExpandData = new NativeFunction(ptr(0x080DD584), 'pointer', ['pointer', 'int'], { "abi": "sysv" });
+
+//设置角色当前绝望之塔层数
+function force_set_TOD_layer(user, layer)
+{
+    var tod_layer = Memory.alloc(100);
+    TOD_Layer_TOD_Layer(tod_layer, layer);
+    var expand_data = CUser_GetCharacExpandData(user, 13);
+    TOD_UserState_setEnterLayer(expand_data, tod_layer);
+}
+
 //开关金币寄售
 function force_open_goldConsignment(user,isOpen)
 {
@@ -1952,6 +1951,24 @@ function force_open_goldConsignment(user,isOpen)
     CUser_Send(user, packet_guard); //发包
     Destroy_PacketGuard_PacketGuard(packet_guard);
 }
+
+//解除每日创建角色数量限制
+function force_disable_create_character_limit(enable)
+{
+    //DB_CreateCharac::CheckLimitCreateNewCharac
+    Interceptor.attach(ptr(0x8401922),
+        {
+            onEnter: function (args)
+            {
+            },
+            onLeave: function (retval)
+            {
+                //1允许0禁止
+                retval.replace(enable);
+            }
+        });
+}
+
 
 //所有人赛利亚房间相互可见
 function share_seria_room()
@@ -2021,7 +2038,7 @@ function fix_use_emblem()
                             var emblem_item_id = api_PacketBuf_get_int(packet_buf);
                             //该徽章镶嵌的时装插槽id
                             var avartar_socket_slot = api_PacketBuf_get_byte(packet_buf);
-                            console.log('emblem_inven_slot=' + emblem_inven_slot + ', emblem_item_id=' + emblem_item_id + ', avartar_socket_slot=' + avartar_socket_slot);
+                            //console.log('emblem_inven_slot=' + emblem_inven_slot + ', emblem_item_id=' + emblem_item_id + ', avartar_socket_slot=' + avartar_socket_slot);
                             //获取徽章道具
                             var emblem = CInventory_getInvenRef(inven, INVENTORY_TYPE_ITEM, emblem_inven_slot);
                             //校验徽章及插槽数据是否合法
@@ -2062,7 +2079,7 @@ function fix_use_emblem()
                             //设置时装插槽数据
                             var emblem_item_id = emblems[avartar_socket_slot][1];
                             api_set_JewelSocketData(jewel_socket_data, avartar_socket_slot, emblem_item_id);
-                            console.log('徽章item_id=' + emblem_item_id + '已成功镶嵌进avartar_socket_slot=' + avartar_socket_slot + '的槽内!');
+                            //console.log('徽章item_id=' + emblem_item_id + '已成功镶嵌进avartar_socket_slot=' + avartar_socket_slot + '的槽内!');
                         }
                         //时装插槽数据存档
                         DB_UpdateAvatarJewelSlot_makeRequest(CUserCharacInfo_getCurCharacNo(user), api_get_avartar_ui_id(avartar), jewel_socket_data);
@@ -2075,7 +2092,7 @@ function fix_use_emblem()
                         InterfacePacketBuf_finalize(packet_guard, 1);
                         CUser_Send(user, packet_guard);
                         Destroy_PacketGuard_PacketGuard(packet_guard);
-                        console.log('镶嵌请求已处理完成!');
+                        //console.log('镶嵌请求已处理完成!');
                     }
                 } catch (error)
                 {
@@ -2174,6 +2191,7 @@ function start() {
 	console.log('================frida start function start ================');
 	//Dark_Knight_Button;//黑暗武士按键修复//需要导入PVF文件
     fix_use_emblem(); //镶嵌
+    force_disable_create_character_limit(1);//允许建角色超出限制
     enable_online_reward(); //在线奖励
     //force_open_all_event(1);
     share_seria_room();//所有人赛利亚房间相互可见
